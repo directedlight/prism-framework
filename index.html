@@ -1,72 +1,4 @@
-// Update category scores
-            updateCategoryScore('process', scores.process);
-            updateCategoryScore('resources', scores.resources);
-            updateCategoryScore('integration', scores.integration);
-            updateCategoryScore('strategic', scores.strategic);
-            updateCategoryScore('measurable', scores.measurable);
-            
-            // Generate recommendation
-            const recommendationText = generateRecommendation(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores);
-            document.getElementById('recommendation-text').innerHTML = recommendationText;
-            
-            // Update approach descriptions
-            updateApproachDescriptions(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores);
-            
-            // Show results
-            document.getElementById('results').style.display = 'block';
-            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function calculateSectionScore(questionNames) {
-            let sectionScore = 0;
-            questionNames.forEach(name => {
-                const selected = document.querySelector(`input[name="${name}"]:checked`);
-                if (selected) {
-                    const value = parseInt(selected.value);
-                    switch(value) {
-                        case 1: sectionScore += 0; break;
-                        case 2: sectionScore += 5; break;
-                        case 3: sectionScore += 10; break;
-                        case 4: sectionScore += 15; break;
-                    }
-                }
-            });
-            return sectionScore;
-        }
-        
-        function calculateSectionMCPScore(questionNames) {
-            let sectionScore = 0;
-            questionNames.forEach(name => {
-                const selected = document.querySelector(`input[name="${name}"]:checked`);
-                if (selected) {
-                    const value = parseInt(selected.value);
-                    switch(value) {
-                        case 1: sectionScore += parseInt(selected.parentElement.textContent.match(/\((\d+) MCP points/)[1]); break;
-                        case 2: sectionScore += parseInt(selected.parentElement.textContent.match(/\((\d+) MCP points/)[1]); break;
-                        case 3: sectionScore += parseInt(selected.parentElement.textContent.match(/\((\d+) MCP points/)[1]); break;
-                        case 4: sectionScore += parseInt(selected.parentElement.textContent.match(/\((\d+) MCP points/)[1]); break;
-                    }
-                }
-            });
-            return sectionScore;
-        }
-        
-        function calculateSectionWorkflowScore(questionNames) {
-            let sectionScore = 0;
-            questionNames.forEach(name => {
-                const selected = document.querySelector(`input[name="${name}"]:checked`);
-                if (selected) {
-                    const value = parseInt(selected.value);
-                    switch(value) {
-                        case 1: sectionScore += parseInt(selected.parentElement.textContent.match(/(\d+) Workflow points/)[1]); break;
-                        case 2: sectionScore += parseInt(selected.parentElement.textContent.match(/(\d+) Workflow points/)[1]); break;
-                        case 3: sectionScore += parseInt(selected.parentElement.textContent.match(/(\d+) Workflow points/)[1]); break;
-                        case 4: sectionScore += parseInt(selected.parentElement.textContent.match(/(\d+) Workflow points/)[1]); break;
-                    }
-                }
-            });
-            return sectionScore;
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -419,6 +351,14 @@
             margin-left: 10px;
         }
         
+        .category-scores {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
         .category-score {
             flex: 1 1 calc(50% - 15px);
             min-width: 200px;
@@ -480,6 +420,36 @@
             margin-top: 0;
         }
         
+        .resources-tabs {
+            margin-top: 15px;
+        }
+        
+        .tab-headers {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .tab-header {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+        
+        .tab-header.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
         .resources-list {
             list-style-type: none;
             padding: 0;
@@ -517,34 +487,41 @@
             margin-top: 20px;
         }
         
-        .resources-tabs {
-            margin-top: 15px;
-        }
-        
-        .tab-headers {
-            display: flex;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 15px;
-        }
-        
-        .tab-header {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            font-weight: 500;
-        }
-        
-        .tab-header.active {
-            border-bottom-color: var(--primary);
-            color: var(--primary);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .category-scores {
+                flex-direction: column;
+            }
+            
+            .category-score {
+                flex: 1 1 100%;
+            }
+            
+            .comparison-container {
+                flex-direction: column;
+            }
+            
+            .approach-card {
+                margin-bottom: 15px;
+            }
+            
+            .tab-headers {
+                flex-direction: column;
+                border-bottom: none;
+            }
+            
+            .tab-header {
+                border-left: 3px solid transparent;
+                border-bottom: 1px solid #ddd;
+            }
+            
+            .tab-header.active {
+                border-left-color: var(--primary);
+                border-bottom-color: #ddd;
+            }
         }
     </style>
 </head>
@@ -552,7 +529,7 @@
     <div class="prism-logo">
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <polygon points="50,10 10,70 90,70" fill="none" stroke="#7209b7" stroke-width="2"/>
-            <line x1="50" y1="10" x2="50" y2="70" stroke="#4361ee" stroke-width="2"/>
+            <line x1="50" y1="10" x2="50" y1="70" stroke="#4361ee" stroke-width="2"/>
             <line x1="30" y1="70" x2="50" y1="10" stroke="#3a0ca3" stroke-width="2"/>
             <line x1="70" y1="70" x2="50" y1="10" stroke="#4cc9f0" stroke-width="2"/>
         </svg>
@@ -561,7 +538,7 @@
     <h1>PRISM</h1>
     <h2 style="text-align: center; margin-top: -15px; color: #666;">Platform Readiness & Implementation Scorecard for MCP</h2>
     
-    <p style="text-align: center; margin-bottom: 30px;">Evaluate if Multi-agent Conversational Processing (MCP) is the right solution for your business needs.</p>
+    <p style="text-align: center; margin-bottom: 30px;">Evaluate whether Multi-agent Conversational Processing (MCP) or traditional workflow automation is the right solution for your business needs.</p>
     
     <form id="prism-form">
         <!-- Process Complexity Section -->
@@ -767,6 +744,7 @@
                 </div>
                 <div class="options">
                     <label class="option"><input type="radio" name="adoption" value="1"> Resistance to AI but open to traditional automation (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="adoption" value="2"> Mixed reception, some champions but also skeptics
                     <label class="option"><input type="radio" name="adoption" value="2"> Mixed reception, some champions but also skeptics (5 MCP points, 10 Workflow points)</label>
                     <label class="option"><input type="radio" name="adoption" value="3"> Generally positive with good executive support (10 MCP points, 5 Workflow points)</label>
                     <label class="option"><input type="radio" name="adoption" value="4"> Strong AI adoption culture with proactive engagement (15 MCP points, 0 Workflow points)</label>
@@ -787,37 +765,6 @@
                     <label class="option"><input type="radio" name="timeline" value="2"> Short-term horizon (3-6 months) (5 MCP points, 10 Workflow points)</label>
                     <label class="option"><input type="radio" name="timeline" value="3"> Medium-term investment (6-12 months) (10 MCP points, 5 Workflow points)</label>
                     <label class="option"><input type="radio" name="timeline" value="4"> Long-term strategic initiative (12+ months) (15 MCP points, 0 Workflow points)</label>
-                </div>
-                <textarea placeholder="Explain your implementation timeline expectations..."></textarea>
-            </div>
-                    <label class="option"><input type="radio" name="adoption" value="1"> Resistance to AI but open to traditional automation (0 MCP points, 15 Workflow points)</label>
-                    <label class="option"><input type="radio" name="adoption" value="2"> Mixed reception, some champions but also skeptics (5 MCP points, 10 Workflow points)</label>
-                    <label class="option"><input type="radio" name="adoption" value="3"> Generally positive with good executive support (10 MCP points, 5 Workflow points)</label>
-                    <label class="option"><input type="radio" name="adoption" value="4"> Strong AI adoption culture with proactive engagement (15 MCP points, 0 Workflow points)</label>
-                </div>
-                <textarea placeholder="Describe your organization's attitude toward AI..."></textarea>
-            </div>
-            
-            <div class="question">
-                <div class="question-title">
-                    3. What is your timeline for implementation and results?
-                    <span class="tooltip" data-tip="MCP frameworks often require longer setup time. Workflow automation tools typically offer faster implementation and more immediate ROI.">?</span>
-                </div>
-                <div class="question-guidance">
-                    Consider your expectations for when you need to see business impact.
-                </div>
-                <div class="options">
-                    <label class="option"><input type="radio" name="timeline" value="1"> Need immediate results (0-3 months) (0 MCP points, 15 Workflow points)</label>
-                    <label class="option"><input type="radio" name="timeline" value="2"> Short-term horizon (3-6 months) (5 MCP points, 10 Workflow points)</label>
-                    <label class="option"><input type="radio" name="timeline" value="3"> Medium-term investment (6-12 months) (10 MCP points, 5 Workflow points)</label>
-                    <label class="option"><input type="radio" name="timeline" value="4"> Long-term strategic initiative (12+ months) (15 MCP points, 0 Workflow points)</label>
-                </div>
-                <textarea placeholder="Explain your implementation timeline expectations..."></textarea>
-            </div>
-                    <label class="option"><input type="radio" name="timeline" value="1"> Need immediate results (0-3 months) (0 points)</label>
-                    <label class="option"><input type="radio" name="timeline" value="2"> Short-term horizon (3-6 months) (5 points)</label>
-                    <label class="option"><input type="radio" name="timeline" value="3"> Medium-term investment (6-12 months) (10 points)</label>
-                    <label class="option"><input type="radio" name="timeline" value="4"> Long-term strategic initiative (12+ months) (15 points)</label>
                 </div>
                 <textarea placeholder="Explain your implementation timeline expectations..."></textarea>
             </div>
@@ -893,122 +840,65 @@
             </div>
         </div>
         
-        <div class="category-scores">
-            <div class="category-score process">
-                <div class="category-name">Process Complexity</div>
-                <div class="category-value">
-                    <span>25</span>
-                    <div class="category-bar">
-                        <div class="category-fill" style="--width: 60%;"></div>
-                    </div>
-                    <span>45</span>
-                </div>
-            </div>
-            
-            <div class="category-score resources">
-                <div class="category-name">Resource Requirements</div>
-                <div class="category-value">
-                    <span>15</span>
-                    <div class="category-bar">
-                        <div class="category-fill" style="--width: 33%;"></div>
-                    </div>
-                    <span>45</span>
-                </div>
-            </div>
-            
-            <div class="category-score integration">
-                <div class="category-name">Integration Potential</div>
-                <div class="category-value">
-                    <span>20</span>
-                    <div class="category-bar">
-                        <div class="category-fill" style="--width: 44%;"></div>
-                    </div>
-                    <span>45</span>
-                </div>
-            </div>
-            
-            <div class="category-score strategic">
-                <div class="category-name">Strategic Alignment</div>
-                <div class="category-value">
-                    <span>15</span>
-                    <div class="category-bar">
-                        <div class="category-fill" style="--width: 33%;"></div>
-                    </div>
-                    <span>45</span>
-                </div>
-            </div>
-            
-            <div class="category-score measurable">
-                <div class="category-name">Measurable Impact</div>
-                <div class="category-value">
-                    <span>10</span>
-                    <div class="category-bar">
-                        <div class="category-fill" style="--width: 22%;"></div>
-                    </div>
-                    <span>45</span>
+        <div class="pie-chart-container">
+            <div class="pie-chart" style="--percent: 38%;">
+                <div class="pie-chart-inner">
+                    <div class="score-value">38%</div>
+                    <div>MCP Readiness</div>
                 </div>
             </div>
         </div>
         
-                    <div class="pie-chart-container">
-                <div class="pie-chart" style="--percent: 38%;">
-                    <div class="pie-chart-inner">
-                        <div class="score-value">38%</div>
-                        <div>MCP Readiness</div>
+        <div class="comparison-container">
+            <div class="approach-card mcp">
+                <div class="approach-header">
+                    <div class="approach-score mcp">38%</div>
+                    <div>
+                        <div class="approach-title">MCP Framework</div>
+                        <div class="approach-subtitle">Multi-agent Conversational Processing</div>
                     </div>
+                </div>
+                <div class="approach-details">
+                    <p>Based on your responses, MCP implementation would likely require significant preparation but could be viable for specific use cases.</p>
+                </div>
+                <div class="approach-strengths">
+                    <h4>Best suited for:</h4>
+                    <ul class="strengths-list">
+                        <li>Complex workflows involving multiple expert domains</li>
+                        <li>Processes requiring subjective judgment</li>
+                        <li>Handling unstructured data and content</li>
+                        <li>Tasks with high variability between executions</li>
+                    </ul>
                 </div>
             </div>
             
-            <div class="comparison-container">
-                <div class="approach-card mcp">
-                    <div class="approach-header">
-                        <div class="approach-score mcp">38%</div>
-                        <div>
-                            <div class="approach-title">MCP Framework</div>
-                            <div class="approach-subtitle">Multi-agent Conversational Processing</div>
-                        </div>
-                    </div>
-                    <div class="approach-details">
-                        <p>Based on your responses, MCP implementation would likely require significant preparation but could be viable for specific use cases.</p>
-                    </div>
-                    <div class="approach-strengths">
-                        <h4>Best suited for:</h4>
-                        <ul class="strengths-list">
-                            <li>Complex workflows involving multiple expert domains</li>
-                            <li>Processes requiring subjective judgment</li>
-                            <li>Handling unstructured data and content</li>
-                            <li>Tasks with high variability between executions</li>
-                        </ul>
+            <div class="approach-card workflow">
+                <div class="approach-header">
+                    <div class="approach-score workflow">62%</div>
+                    <div>
+                        <div class="approach-title">Workflow Automation <span class="recommended-badge">Recommended</span></div>
+                        <div class="approach-subtitle">n8n, Make, Zapier, etc.</div>
                     </div>
                 </div>
-                
-                <div class="approach-card workflow">
-                    <div class="approach-header">
-                        <div class="approach-score workflow">62%</div>
-                        <div>
-                            <div class="approach-title">Workflow Automation <span class="recommended-badge">Recommended</span></div>
-                            <div class="approach-subtitle">n8n, Make, Zapier, etc.</div>
-                        </div>
-                    </div>
-                    <div class="approach-details">
-                        <p>Based on your responses, traditional workflow automation would likely provide a more immediate and cost-effective solution.</p>
-                    </div>
-                    <div class="approach-strengths">
-                        <h4>Best suited for:</h4>
-                        <ul class="strengths-list">
-                            <li>Structured, predictable processes</li>
-                            <li>Quick implementation timeframes</li>
-                            <li>Lower technical expertise requirements</li>
-                            <li>Consistent rule-based decision-making</li>
-                        </ul>
-                    </div>
+                <div class="approach-details">
+                    <p>Based on your responses, traditional workflow automation would likely provide a more immediate and cost-effective solution.</p>
+                </div>
+                <div class="approach-strengths">
+                    <h4>Best suited for:</h4>
+                    <ul class="strengths-list">
+                        <li>Structured, predictable processes</li>
+                        <li>Quick implementation timeframes</li>
+                        <li>Lower technical expertise requirements</li>
+                        <li>Consistent rule-based decision-making</li>
+                    </ul>
                 </div>
             </div>
-            
-            <div class="recommendation">
-                <h3>Implementation Recommendation</h3>
-                <p id="recommendation-text">Based on your PRISM score of <strong>38%</strong> for MCP readiness and <strong>62%</strong> for workflow automation suitability, we recommend starting with a traditional workflow automation approach using tools like n8n, Make, or Zapier. Your organization shows stronger alignment with workflow automation at this time, though you may want to consider MCP for specific complex use cases in the future.</p>
-            </div>
+        </div>
+        
+        <div class="recommendation">
+            <h3>Implementation Recommendation</h3>
+            <p id="recommendation-text">Based on your PRISM score of <strong>38%</strong> for MCP readiness and <strong>62%</strong> for workflow automation suitability, we recommend starting with a traditional workflow automation approach using tools like n8n, Make, or Zapier. Your organization shows stronger alignment with workflow automation at this time, though you may want to consider MCP for specific complex use cases in the future.</p>
+        </div>
         
         <div class="resources-section">
             <h3>Recommended Resources</h3>
@@ -1114,8 +1004,11 @@
             updateCategoryScore('measurable', scores.measurable);
             
             // Generate recommendation
-            const recommendationText = generateRecommendation(totalScore, scores);
+            const recommendationText = generateRecommendation(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores);
             document.getElementById('recommendation-text').innerHTML = recommendationText;
+            
+            // Update approach descriptions
+            updateApproachDescriptions(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores);
             
             // Show results
             document.getElementById('results').style.display = 'block';
@@ -1139,11 +1032,43 @@
             return sectionScore;
         }
         
+        function calculateSectionMCPScore(questionNames) {
+            let sectionScore = 0;
+            questionNames.forEach(name => {
+                const selected = document.querySelector(`input[name="${name}"]:checked`);
+                if (selected) {
+                    const value = parseInt(selected.value);
+                    const match = selected.parentElement.textContent.match(/\((\d+) MCP points/);
+                    if (match) {
+                        sectionScore += parseInt(match[1]);
+                    }
+                }
+            });
+            return sectionScore;
+        }
+        
+        function calculateSectionWorkflowScore(questionNames) {
+            let sectionScore = 0;
+            questionNames.forEach(name => {
+                const selected = document.querySelector(`input[name="${name}"]:checked`);
+                if (selected) {
+                    const value = parseInt(selected.value);
+                    const match = selected.parentElement.textContent.match(/(\d+) Workflow points/);
+                    if (match) {
+                        sectionScore += parseInt(match[1]);
+                    }
+                }
+            });
+            return sectionScore;
+        }
+        
         function updateCategoryScore(category, score) {
             const categoryElement = document.querySelector(`.category-score.${category}`);
-            categoryElement.querySelector('span:first-child').textContent = score;
-            const percentage = Math.round((score / 45) * 100); // 45 = 3 questions * 15 points max
-            categoryElement.querySelector('.category-fill').style.setProperty('--width', `${percentage}%`);
+            if (categoryElement) {
+                categoryElement.querySelector('span:first-child').textContent = score;
+                const percentage = Math.round((score / 45) * 100); // 45 = 3 questions * 15 points max
+                categoryElement.querySelector('.category-fill').style.setProperty('--width', `${percentage}%`);
+            }
         }
         
         function generateRecommendation(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores) {
@@ -1258,4 +1183,4 @@
         }
     </script>
 </body>
-</html>
+</html>            
