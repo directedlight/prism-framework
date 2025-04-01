@@ -1,0 +1,1261 @@
+// Update category scores
+            updateCategoryScore('process', scores.process);
+            updateCategoryScore('resources', scores.resources);
+            updateCategoryScore('integration', scores.integration);
+            updateCategoryScore('strategic', scores.strategic);
+            updateCategoryScore('measurable', scores.measurable);
+            
+            // Generate recommendation
+            const recommendationText = generateRecommendation(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores);
+            document.getElementById('recommendation-text').innerHTML = recommendationText;
+            
+            // Update approach descriptions
+            updateApproachDescriptions(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores);
+            
+            // Show results
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function calculateSectionScore(questionNames) {
+            let sectionScore = 0;
+            questionNames.forEach(name => {
+                const selected = document.querySelector(`input[name="${name}"]:checked`);
+                if (selected) {
+                    const value = parseInt(selected.value);
+                    switch(value) {
+                        case 1: sectionScore += 0; break;
+                        case 2: sectionScore += 5; break;
+                        case 3: sectionScore += 10; break;
+                        case 4: sectionScore += 15; break;
+                    }
+                }
+            });
+            return sectionScore;
+        }
+        
+        function calculateSectionMCPScore(questionNames) {
+            let sectionScore = 0;
+            questionNames.forEach(name => {
+                const selected = document.querySelector(`input[name="${name}"]:checked`);
+                if (selected) {
+                    const value = parseInt(selected.value);
+                    switch(value) {
+                        case 1: sectionScore += parseInt(selected.parentElement.textContent.match(/\((\d+) MCP points/)[1]); break;
+                        case 2: sectionScore += parseInt(selected.parentElement.textContent.match(/\((\d+) MCP points/)[1]); break;
+                        case 3: sectionScore += parseInt(selected.parentElement.textContent.match(/\((\d+) MCP points/)[1]); break;
+                        case 4: sectionScore += parseInt(selected.parentElement.textContent.match(/\((\d+) MCP points/)[1]); break;
+                    }
+                }
+            });
+            return sectionScore;
+        }
+        
+        function calculateSectionWorkflowScore(questionNames) {
+            let sectionScore = 0;
+            questionNames.forEach(name => {
+                const selected = document.querySelector(`input[name="${name}"]:checked`);
+                if (selected) {
+                    const value = parseInt(selected.value);
+                    switch(value) {
+                        case 1: sectionScore += parseInt(selected.parentElement.textContent.match(/(\d+) Workflow points/)[1]); break;
+                        case 2: sectionScore += parseInt(selected.parentElement.textContent.match(/(\d+) Workflow points/)[1]); break;
+                        case 3: sectionScore += parseInt(selected.parentElement.textContent.match(/(\d+) Workflow points/)[1]); break;
+                        case 4: sectionScore += parseInt(selected.parentElement.textContent.match(/(\d+) Workflow points/)[1]); break;
+                    }
+                }
+            });
+            return sectionScore;
+        }<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISM - Platform Readiness & Implementation Scorecard for MCP</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --light-accent: #4cc9f0;
+            --dark-accent: #7209b7;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--secondary);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--dark-accent);
+            font-size: 2.5rem;
+        }
+        
+        .prism-logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .prism-logo svg {
+            width: 150px;
+            height: auto;
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--primary);
+        }
+        
+        .section.process { border-left-color: #7209b7; }
+        .section.resources { border-left-color: #3a0ca3; }
+        .section.integration { border-left-color: #4361ee; }
+        .section.strategic { border-left-color: #4cc9f0; }
+        .section.measurable { border-left-color: #2ecc71; }
+        
+        .question {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .question-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .question-guidance {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--light-accent);
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+        }
+        
+        input[type="radio"] {
+            margin-right: 10px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 80px;
+            margin-top: 10px;
+        }
+        
+        .tooltip {
+            display: inline-block;
+            background-color: var(--light-accent);
+            color: white;
+            width: 18px;
+            height: 18px;
+            text-align: center;
+            border-radius: 50%;
+            margin-left: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 24px;
+            top: -5px;
+            width: 300px;
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            z-index: 10;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .submit-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: background-color 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: var(--secondary);
+        }
+        
+        .results {
+            display: none;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .score-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .score {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success) 0%, var(--success) var(--percent), #eee var(--percent), #eee 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .score::after {
+            content: "";
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background-color: white;
+        }
+        
+        .score-value {
+            position: relative;
+            z-index: 2;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: -5px;
+        }
+        
+        .score-percentage {
+            position: relative;
+            z-index: 2;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        .pie-chart-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .pie-chart {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success) 0% var(--percent), #eee var(--percent) 100%);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pie-chart-inner {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .comparison-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        
+        .approach-card {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .approach-card.mcp {
+            border-top: 5px solid var(--primary);
+        }
+        
+        .approach-card.workflow {
+            border-top: 5px solid var(--success);
+        }
+        
+        .approach-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .approach-score {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .approach-score.mcp {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .approach-score.workflow {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .approach-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            flex-grow: 1;
+        }
+        
+        .approach-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: -5px;
+        }
+        
+        .approach-details {
+            margin-top: 15px;
+        }
+        
+        .approach-strengths {
+            margin-top: 15px;
+        }
+        
+        .approach-strengths h4 {
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .strengths-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        
+        .strengths-list li {
+            padding: 5px 0 5px 20px;
+            position: relative;
+            font-size: 0.9rem;
+        }
+        
+        .strengths-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+        
+        .workflow .strengths-list li::before {
+            color: var(--success);
+        }
+        
+        .recommended-badge {
+            background-color: var(--success);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
+        .category-score {
+            flex: 1 1 calc(50% - 15px);
+            min-width: 200px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        
+        .category-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+        
+        .category-value {
+            display: flex;
+            align-items: center;
+        }
+        
+        .category-bar {
+            flex-grow: 1;
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            margin: 0 10px;
+            position: relative;
+        }
+        
+        .category-fill {
+            position: absolute;
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 5px;
+            width: var(--width);
+        }
+        
+        .resources .category-fill { background-color: #3a0ca3; }
+        .process .category-fill { background-color: #7209b7; }
+        .integration .category-fill { background-color: #4361ee; }
+        .strategic .category-fill { background-color: #4cc9f0; }
+        .measurable .category-fill { background-color: #2ecc71; }
+        
+        .recommendation {
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            background-color: var(--light);
+        }
+        
+        .resources-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f0f7ff;
+            border-radius: 8px;
+        }
+        
+        .resources-section h3 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+        
+        .resources-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .resources-list li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .resources-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+        
+        .resources-list a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .resources-list a:hover {
+            text-decoration: underline;
+        }
+        
+        .print-btn {
+            background-color: var(--light-accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .resources-tabs {
+            margin-top: 15px;
+        }
+        
+        .tab-headers {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .tab-header {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+        
+        .tab-header.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="prism-logo">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="50,10 10,70 90,70" fill="none" stroke="#7209b7" stroke-width="2"/>
+            <line x1="50" y1="10" x2="50" y2="70" stroke="#4361ee" stroke-width="2"/>
+            <line x1="30" y1="70" x2="50" y1="10" stroke="#3a0ca3" stroke-width="2"/>
+            <line x1="70" y1="70" x2="50" y1="10" stroke="#4cc9f0" stroke-width="2"/>
+        </svg>
+    </div>
+    
+    <h1>PRISM</h1>
+    <h2 style="text-align: center; margin-top: -15px; color: #666;">Platform Readiness & Implementation Scorecard for MCP</h2>
+    
+    <p style="text-align: center; margin-bottom: 30px;">Evaluate if Multi-agent Conversational Processing (MCP) is the right solution for your business needs.</p>
+    
+    <form id="prism-form">
+        <!-- Process Complexity Section -->
+        <div class="section process">
+            <h2>P - Process Complexity</h2>
+            <p>Evaluating whether your workflow is complex enough to benefit from MCP implementation.</p>
+            
+            <div class="question">
+                <div class="question-title">
+                    1. How many distinct expert domains are involved in your workflow?
+                    <span class="tooltip" data-tip="MCP excels when multiple types of expertise need to collaborate. Simpler workflow automation works best when fewer domains are involved or when their interactions are predictable.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Think about the different specialized knowledge areas required in your workflow. Count domains that would typically require different specialists or departments.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="domains" value="1"> Single domain (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="domains" value="2"> 2-3 domains (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="domains" value="3"> 4-6 domains (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="domains" value="4"> 7+ domains (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="List the specific domains involved in your workflow..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    2. How iterative is your current workflow process?
+                    <span class="tooltip" data-tip="MCP frameworks excel when multiple rounds of refinement and collaboration are needed. Workflow automation works best for more linear, predictable processes.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider how many times information needs to pass back and forth between different people or departments before completion.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="iterative" value="1"> Minimal iteration - mostly linear processes (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="iterative" value="2"> Occasional iteration between 2-3 steps (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="iterative" value="3"> Moderate iteration across multiple steps (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="iterative" value="4"> Highly iterative with frequent handoffs (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe your current workflow iteration patterns..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    3. What level of decision-making complexity is involved?
+                    <span class="tooltip" data-tip="MCP systems handle complex decision trees involving judgment and reasoning. Workflow automation works best for processes with clear, rule-based decisions.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Evaluate the complexity of decisions made within your workflow. Are decisions based on clear rules or subjective judgments?
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="decisions" value="1"> Simple, rule-based decisions (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="decisions" value="2"> Mostly rule-based with some exceptions (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="decisions" value="3"> Complex decisions with multiple factors (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="decisions" value="4"> Decisions requiring subjective judgment or reasoning (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe the types of decisions made in your workflow..."></textarea>
+            </div>
+        </div>
+        
+        <!-- Resource Requirements Section -->
+        <div class="section resources">
+            <h2>R - Resource Requirements</h2>
+            <p>Assessing the technical infrastructure and budget needed for MCP implementation.</p>
+            
+            <div class="question">
+                <div class="question-title">
+                    1. What API infrastructure do you currently have available?
+                    <span class="tooltip" data-tip="MCP implementations typically require robust API infrastructure. Workflow automation tools often have pre-built connectors that can work with limited API availability.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider your current API ecosystem and how accessible your data and services are.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="api" value="1"> No APIs available (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="api" value="2"> Limited APIs, not covering all needed systems (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="api" value="3"> Most systems have APIs but with varying quality (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="api" value="4"> Comprehensive API coverage with good documentation (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="List your key systems and their API availability..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    2. What is your budget allocation for AI implementation?
+                    <span class="tooltip" data-tip="MCP systems typically require higher investment. Workflow automation tools often have lower implementation costs and more predictable pricing models.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider both initial implementation costs and ongoing operational expenses.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="budget" value="1"> Minimal budget, seeking low-cost solutions (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="budget" value="2"> Moderate budget, focused on specific high-value areas (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="budget" value="3"> Substantial budget with executive support (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="budget" value="4"> Strategic investment with dedicated resources (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe your budget expectations and constraints..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    3. What technical expertise is available in-house?
+                    <span class="tooltip" data-tip="MCP systems typically require specialists familiar with AI. Workflow automation platforms are often designed for use by business users with minimal technical expertise.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider your team's experience with AI systems and automation platforms.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="expertise" value="1"> No relevant technical expertise (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="expertise" value="2"> Basic technical team but no AI experience (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="expertise" value="3"> Some AI experience but limited MCP-specific knowledge (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="expertise" value="4"> Strong AI team with relevant experience (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe your team's technical capabilities and experience with AI..."></textarea>
+            </div>
+        </div>
+        
+        <!-- Integration Potential Section -->
+        <div class="section integration">
+            <h2>I - Integration Potential</h2>
+            <p>Evaluating how well MCP would connect with your existing systems.</p>
+            
+            <div class="question">
+                <div class="question-title">
+                    1. How modular are your current systems and processes?
+                    <span class="tooltip" data-tip="MCP frameworks integrate well with modular systems. Workflow automation tools often have pre-built connectors for common systems regardless of architecture.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider whether your systems are built as independent services or as monolithic applications.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="modular" value="1"> Monolithic, tightly coupled systems (0 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="modular" value="2"> Some modularity but significant tight coupling (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="modular" value="3"> Mostly modular with some integration challenges (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="modular" value="4"> Highly modular, service-oriented architecture (15 MCP points, 5 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe the architecture of your key systems..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    2. What data standardization exists across your systems?
+                    <span class="tooltip" data-tip="MCP agents need standardized data. Workflow automation tools often include built-in data transformation capabilities for handling inconsistent formats.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider how consistently data is structured across different systems and departments.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="data" value="1"> No standardization, each system uses unique formats (0 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="data" value="2"> Limited standardization within departments (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="data" value="3"> Good standardization but some exceptions (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="data" value="4"> Comprehensive data standards organization-wide (15 MCP points, 5 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe your data standardization practices..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    3. How critical is unstructured data processing to your workflow?
+                    <span class="tooltip" data-tip="MCP systems excel at processing unstructured data like text, images, and documents. Workflow automation works best with structured data that follows consistent patterns.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider how much of your workflow involves analyzing and interpreting unstructured content.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="access" value="1"> Minimal unstructured data (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="access" value="2"> Some unstructured data but not central to process (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="access" value="3"> Significant unstructured data processing needed (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="access" value="4"> Primarily focused on unstructured data analysis (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe the types of data your process handles..."></textarea>
+            </div>
+        </div>
+        
+        <!-- Strategic Alignment Section -->
+        <div class="section strategic">
+            <h2>S - Strategic Alignment</h2>
+            <p>Determining if MCP aligns with your business goals and future vision.</p>
+            
+            <div class="question">
+                <div class="question-title">
+                    1. How critical is process acceleration to your business strategy?
+                    <span class="tooltip" data-tip="MCP excels at accelerating complex workflows requiring judgment. Workflow automation is better for streamlining predictable, repetitive processes.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider the strategic value of reducing cycle times in your key processes.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="acceleration" value="1"> Speed for routine, predictable processes (5 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="acceleration" value="2"> Balance of routine and complex process acceleration (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="acceleration" value="3"> Acceleration for processes requiring coordination (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="acceleration" value="4"> Acceleration for complex, judgment-based processes (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Explain how process speed impacts your business..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    2. How aligned is your organization with AI adoption?
+                    <span class="tooltip" data-tip="MCP requires stronger cultural readiness for AI. Workflow automation tools are often more familiar and may face less resistance.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider executive support, staff readiness, and cultural factors that might affect adoption.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="adoption" value="1"> Resistance to AI but open to traditional automation (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="adoption" value="2"> Mixed reception, some champions but also skeptics (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="adoption" value="3"> Generally positive with good executive support (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="adoption" value="4"> Strong AI adoption culture with proactive engagement (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe your organization's attitude toward AI..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    3. What is your timeline for implementation and results?
+                    <span class="tooltip" data-tip="MCP frameworks often require longer setup time. Workflow automation tools typically offer faster implementation and more immediate ROI.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider your expectations for when you need to see business impact.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="timeline" value="1"> Need immediate results (0-3 months) (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="2"> Short-term horizon (3-6 months) (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="3"> Medium-term investment (6-12 months) (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="4"> Long-term strategic initiative (12+ months) (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Explain your implementation timeline expectations..."></textarea>
+            </div>
+                    <label class="option"><input type="radio" name="adoption" value="1"> Resistance to AI but open to traditional automation (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="adoption" value="2"> Mixed reception, some champions but also skeptics (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="adoption" value="3"> Generally positive with good executive support (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="adoption" value="4"> Strong AI adoption culture with proactive engagement (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe your organization's attitude toward AI..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    3. What is your timeline for implementation and results?
+                    <span class="tooltip" data-tip="MCP frameworks often require longer setup time. Workflow automation tools typically offer faster implementation and more immediate ROI.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider your expectations for when you need to see business impact.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="timeline" value="1"> Need immediate results (0-3 months) (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="2"> Short-term horizon (3-6 months) (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="3"> Medium-term investment (6-12 months) (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="4"> Long-term strategic initiative (12+ months) (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Explain your implementation timeline expectations..."></textarea>
+            </div>
+                    <label class="option"><input type="radio" name="timeline" value="1"> Need immediate results (0-3 months) (0 points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="2"> Short-term horizon (3-6 months) (5 points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="3"> Medium-term investment (6-12 months) (10 points)</label>
+                    <label class="option"><input type="radio" name="timeline" value="4"> Long-term strategic initiative (12+ months) (15 points)</label>
+                </div>
+                <textarea placeholder="Explain your implementation timeline expectations..."></textarea>
+            </div>
+        </div>
+        
+        <!-- Measurable Impact Section -->
+        <div class="section measurable">
+            <h2>M - Measurable Impact</h2>
+            <p>Projecting the potential ROI and business impact.</p>
+            
+            <div class="question">
+                <div class="question-title">
+                    1. How quantifiable are your current process inefficiencies?
+                    <span class="tooltip" data-tip="Both approaches benefit from measurable pain points, but MCP is often harder to justify without clear metrics due to higher implementation costs.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider whether you have metrics for current process performance and where improvements are needed.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="metrics" value="1"> No metrics available (0 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="metrics" value="2"> Basic metrics but incomplete visibility (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="metrics" value="3"> Good metrics for most key processes (10 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="metrics" value="4"> Comprehensive metrics with baseline data (15 MCP points, 15 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe your current metrics and measurement capabilities..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    2. How much variation exists in your process execution?
+                    <span class="tooltip" data-tip="MCP excels with dynamic processes that require adapting to variations. Workflow automation works best with consistent, predictable processes.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider how much your processes vary from one execution to the next.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="savings" value="1"> Low variation, processes run consistently (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="savings" value="2"> Some variation but within predictable patterns (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="savings" value="3"> Significant variation requiring adaptability (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="savings" value="4"> High variation with unique scenarios each time (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe the variability in your processes..."></textarea>
+            </div>
+            
+            <div class="question">
+                <div class="question-title">
+                    3. What risk mitigation capability is needed?
+                    <span class="tooltip" data-tip="MCP implementations offer nuanced risk management but with less predictability. Workflow automation provides simpler, more predictable risk controls.">?</span>
+                </div>
+                <div class="question-guidance">
+                    Consider the level of verification and oversight needed in your processes.
+                </div>
+                <div class="options">
+                    <label class="option"><input type="radio" name="risk" value="1"> Strict controls with standardized verification (0 MCP points, 15 Workflow points)</label>
+                    <label class="option"><input type="radio" name="risk" value="2"> Moderate controls with some adaptability (5 MCP points, 10 Workflow points)</label>
+                    <label class="option"><input type="radio" name="risk" value="3"> Balanced controls with context-aware verification (10 MCP points, 5 Workflow points)</label>
+                    <label class="option"><input type="radio" name="risk" value="4"> Adaptive controls based on situational analysis (15 MCP points, 0 Workflow points)</label>
+                </div>
+                <textarea placeholder="Describe your risk management requirements..."></textarea>
+            </div>
+        </div>
+        
+        <button type="button" class="submit-btn" onclick="calculateScore()">Calculate PRISM Score</button>
+    </form>
+    
+    <div class="results" id="results">
+        <h2>Your PRISM Score Results</h2>
+        
+        <div class="score-container">
+            <div class="score" style="--percent: 65%;">
+                <div class="score-value">85</div>
+                <div class="score-percentage">38%</div>
+            </div>
+        </div>
+        
+        <div class="category-scores">
+            <div class="category-score process">
+                <div class="category-name">Process Complexity</div>
+                <div class="category-value">
+                    <span>25</span>
+                    <div class="category-bar">
+                        <div class="category-fill" style="--width: 60%;"></div>
+                    </div>
+                    <span>45</span>
+                </div>
+            </div>
+            
+            <div class="category-score resources">
+                <div class="category-name">Resource Requirements</div>
+                <div class="category-value">
+                    <span>15</span>
+                    <div class="category-bar">
+                        <div class="category-fill" style="--width: 33%;"></div>
+                    </div>
+                    <span>45</span>
+                </div>
+            </div>
+            
+            <div class="category-score integration">
+                <div class="category-name">Integration Potential</div>
+                <div class="category-value">
+                    <span>20</span>
+                    <div class="category-bar">
+                        <div class="category-fill" style="--width: 44%;"></div>
+                    </div>
+                    <span>45</span>
+                </div>
+            </div>
+            
+            <div class="category-score strategic">
+                <div class="category-name">Strategic Alignment</div>
+                <div class="category-value">
+                    <span>15</span>
+                    <div class="category-bar">
+                        <div class="category-fill" style="--width: 33%;"></div>
+                    </div>
+                    <span>45</span>
+                </div>
+            </div>
+            
+            <div class="category-score measurable">
+                <div class="category-name">Measurable Impact</div>
+                <div class="category-value">
+                    <span>10</span>
+                    <div class="category-bar">
+                        <div class="category-fill" style="--width: 22%;"></div>
+                    </div>
+                    <span>45</span>
+                </div>
+            </div>
+        </div>
+        
+                    <div class="pie-chart-container">
+                <div class="pie-chart" style="--percent: 38%;">
+                    <div class="pie-chart-inner">
+                        <div class="score-value">38%</div>
+                        <div>MCP Readiness</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="comparison-container">
+                <div class="approach-card mcp">
+                    <div class="approach-header">
+                        <div class="approach-score mcp">38%</div>
+                        <div>
+                            <div class="approach-title">MCP Framework</div>
+                            <div class="approach-subtitle">Multi-agent Conversational Processing</div>
+                        </div>
+                    </div>
+                    <div class="approach-details">
+                        <p>Based on your responses, MCP implementation would likely require significant preparation but could be viable for specific use cases.</p>
+                    </div>
+                    <div class="approach-strengths">
+                        <h4>Best suited for:</h4>
+                        <ul class="strengths-list">
+                            <li>Complex workflows involving multiple expert domains</li>
+                            <li>Processes requiring subjective judgment</li>
+                            <li>Handling unstructured data and content</li>
+                            <li>Tasks with high variability between executions</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="approach-card workflow">
+                    <div class="approach-header">
+                        <div class="approach-score workflow">62%</div>
+                        <div>
+                            <div class="approach-title">Workflow Automation <span class="recommended-badge">Recommended</span></div>
+                            <div class="approach-subtitle">n8n, Make, Zapier, etc.</div>
+                        </div>
+                    </div>
+                    <div class="approach-details">
+                        <p>Based on your responses, traditional workflow automation would likely provide a more immediate and cost-effective solution.</p>
+                    </div>
+                    <div class="approach-strengths">
+                        <h4>Best suited for:</h4>
+                        <ul class="strengths-list">
+                            <li>Structured, predictable processes</li>
+                            <li>Quick implementation timeframes</li>
+                            <li>Lower technical expertise requirements</li>
+                            <li>Consistent rule-based decision-making</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recommendation">
+                <h3>Implementation Recommendation</h3>
+                <p id="recommendation-text">Based on your PRISM score of <strong>38%</strong> for MCP readiness and <strong>62%</strong> for workflow automation suitability, we recommend starting with a traditional workflow automation approach using tools like n8n, Make, or Zapier. Your organization shows stronger alignment with workflow automation at this time, though you may want to consider MCP for specific complex use cases in the future.</p>
+            </div>
+        
+        <div class="resources-section">
+            <h3>Recommended Resources</h3>
+            <p>Explore these up-to-date resources based on your evaluation results:</p>
+            
+            <div class="resources-tabs">
+                <div class="tab-headers">
+                    <div class="tab-header active" onclick="switchTab('mcp-resources')">MCP Resources</div>
+                    <div class="tab-header" onclick="switchTab('workflow-resources')">Workflow Automation Resources</div>
+                </div>
+                
+                <div class="tab-content active" id="mcp-resources">
+                    <ul class="resources-list">
+                        <li><a href="https://github.com/microsoft/autogen" target="_blank">Microsoft AutoGen Framework</a> - Open source framework for building agent-based systems</li>
+                        <li><a href="https://www.anthropic.com/product" target="_blank">Anthropic Claude API Documentation</a> - Documentation for implementing Claude AI agents</li>
+                        <li><a href="https://python.langchain.com/docs/use_cases/agent_simulations" target="_blank">LangChain Agent Simulation Guide</a> - Implementing multi-agent systems with LangChain</li>
+                        <li><a href="https://crewai.io/" target="_blank">CrewAI Documentation</a> - Framework for orchestrating role-playing AI agents</li>
+                        <li><a href="https://www.llamaindex.ai/" target="_blank">LlamaIndex</a> - Data framework for LLM applications and agent systems</li>
+                    </ul>
+                </div>
+                
+                <div class="tab-content" id="workflow-resources">
+                    <ul class="resources-list">
+                        <li><a href="https://n8n.io/workflows/" target="_blank">n8n Workflow Templates</a> - Pre-built workflow templates for common business processes</li>
+                        <li><a href="https://www.make.com/en/templates" target="_blank">Make Scenario Templates</a> - Ready-to-use automation templates for various use cases</li>
+                        <li><a href="https://zapier.com/apps" target="_blank">Zapier Integration Directory</a> - Browse thousands of app integrations for workflow automation</li>
+                        <li><a href="https://automate.io/" target="_blank">Automate.io</a> - Business automation platform with 200+ app integrations</li>
+                        <li><a href="https://www.integromat.com/en/integrations" target="_blank">Integromat</a> - Advanced workflow automation platform</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <p>For more personalized guidance on implementing the right automation solution for your specific needs, contact <a href="mailto:contact@directedlightai.com">Directed Light AI</a>.</p>
+        </div>
+        
+        <button class="print-btn" onclick="window.print()">Print Results</button>
+    </div>
+    
+    <script>
+        function calculateScore() {
+            // Calculate scores for each section
+            const scores = {
+                process: calculateSectionScore(['domains', 'iterative', 'decisions']),
+                resources: calculateSectionScore(['api', 'budget', 'expertise']),
+                integration: calculateSectionScore(['modular', 'data', 'access']),
+                strategic: calculateSectionScore(['acceleration', 'adoption', 'timeline']),
+                measurable: calculateSectionScore(['metrics', 'savings', 'risk'])
+            };
+            
+            // Calculate total MCP score
+            const mcpScore = {
+                process: calculateSectionMCPScore(['domains', 'iterative', 'decisions']),
+                resources: calculateSectionMCPScore(['api', 'budget', 'expertise']),
+                integration: calculateSectionMCPScore(['modular', 'data', 'access']),
+                strategic: calculateSectionMCPScore(['acceleration', 'adoption', 'timeline']),
+                measurable: calculateSectionMCPScore(['metrics', 'savings', 'risk'])
+            };
+            
+            // Calculate total workflow score
+            const workflowScore = {
+                process: calculateSectionWorkflowScore(['domains', 'iterative', 'decisions']),
+                resources: calculateSectionWorkflowScore(['api', 'budget', 'expertise']),
+                integration: calculateSectionWorkflowScore(['modular', 'data', 'access']),
+                strategic: calculateSectionWorkflowScore(['acceleration', 'adoption', 'timeline']),
+                measurable: calculateSectionWorkflowScore(['metrics', 'savings', 'risk'])
+            };
+            
+            const totalMCPScore = mcpScore.process + mcpScore.resources + mcpScore.integration + mcpScore.strategic + mcpScore.measurable;
+            const totalWorkflowScore = workflowScore.process + workflowScore.resources + workflowScore.integration + workflowScore.strategic + workflowScore.measurable;
+            
+            const maxScore = 225; // 15 questions * 15 points max
+            const mcpPercentage = Math.round((totalMCPScore / maxScore) * 100);
+            const workflowPercentage = Math.round((totalWorkflowScore / maxScore) * 100);
+            
+            // Update UI with scores
+            document.querySelector('.score-value').textContent = mcpPercentage + '%';
+            document.querySelector('.score-percentage').textContent = totalMCPScore + '/225';
+            document.querySelector('.score').style.setProperty('--percent', `${mcpPercentage}%`);
+            document.querySelector('.pie-chart').style.setProperty('--percent', `${mcpPercentage}%`);
+            document.querySelector('.pie-chart-inner .score-value').textContent = mcpPercentage + '%';
+            
+            // Update comparison cards
+            document.querySelector('.approach-score.mcp').textContent = mcpPercentage + '%';
+            document.querySelector('.approach-score.workflow').textContent = workflowPercentage + '%';
+            
+            // Determine which approach is recommended
+            const recommendedBadge = document.querySelector('.recommended-badge');
+            if (mcpPercentage > workflowPercentage) {
+                // Move badge to MCP card
+                const mcpTitle = document.querySelector('.approach-card.mcp .approach-title');
+                mcpTitle.appendChild(recommendedBadge);
+            } else {
+                // Keep badge on Workflow card
+                const workflowTitle = document.querySelector('.approach-card.workflow .approach-title');
+                workflowTitle.appendChild(recommendedBadge);
+            }
+            
+            // Update category scores
+            updateCategoryScore('process', scores.process);
+            updateCategoryScore('resources', scores.resources);
+            updateCategoryScore('integration', scores.integration);
+            updateCategoryScore('strategic', scores.strategic);
+            updateCategoryScore('measurable', scores.measurable);
+            
+            // Generate recommendation
+            const recommendationText = generateRecommendation(totalScore, scores);
+            document.getElementById('recommendation-text').innerHTML = recommendationText;
+            
+            // Show results
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function calculateSectionScore(questionNames) {
+            let sectionScore = 0;
+            questionNames.forEach(name => {
+                const selected = document.querySelector(`input[name="${name}"]:checked`);
+                if (selected) {
+                    const value = parseInt(selected.value);
+                    switch(value) {
+                        case 1: sectionScore += 0; break;
+                        case 2: sectionScore += 5; break;
+                        case 3: sectionScore += 10; break;
+                        case 4: sectionScore += 15; break;
+                    }
+                }
+            });
+            return sectionScore;
+        }
+        
+        function updateCategoryScore(category, score) {
+            const categoryElement = document.querySelector(`.category-score.${category}`);
+            categoryElement.querySelector('span:first-child').textContent = score;
+            const percentage = Math.round((score / 45) * 100); // 45 = 3 questions * 15 points max
+            categoryElement.querySelector('.category-fill').style.setProperty('--width', `${percentage}%`);
+        }
+        
+        function generateRecommendation(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores) {
+            let recommendation = '';
+            
+            // Compare the two approaches
+            if (mcpPercentage >= workflowPercentage) {
+                recommendation = `Based on your PRISM evaluation, your organization shows <strong>${mcpPercentage}%</strong> readiness for MCP implementation compared to <strong>${workflowPercentage}%</strong> for traditional workflow automation. `;
+                
+                if (mcpPercentage >= 70) {
+                    recommendation += "Your organization demonstrates excellent readiness for MCP implementation. The complexity and nature of your workflows make them well-suited for a multi-agent approach.";
+                } else if (mcpPercentage >= 50) {
+                    recommendation += "Your organization shows good readiness for MCP implementation, though some preparation work would be beneficial. Consider a phased approach starting with a pilot project in your strongest areas.";
+                } else {
+                    recommendation += "While MCP scored higher than workflow automation, your overall readiness score suggests careful preparation is needed. Consider starting with a small proof-of-concept project while addressing key gaps.";
+                }
+            } else {
+                recommendation = `Based on your PRISM evaluation, your organization shows <strong>${workflowPercentage}%</strong> alignment with traditional workflow automation compared to <strong>${mcpPercentage}%</strong> for MCP implementation. `;
+                
+                if (workflowPercentage >= 70) {
+                    recommendation += "Traditional workflow automation tools like n8n, Make, or Zapier would likely provide the most immediate and cost-effective solution for your needs.";
+                } else if (workflowPercentage >= 50) {
+                    recommendation += "Traditional workflow automation appears to be a better fit at this time, though you may want to re-evaluate as your processes evolve or your technical capabilities increase.";
+                } else {
+                    recommendation += "While workflow automation scored higher than MCP, your scores suggest you may face implementation challenges with either approach. Starting with simple automation of your most standardized processes may be the best path forward.";
+                }
+            }
+            
+            // Add gap analysis
+            const categories = ['process', 'resources', 'integration', 'strategic', 'measurable'];
+            const weakestCategory = categories.reduce((min, category) => 
+                scores[category] < scores[min] ? category : min, categories[0]);
+            
+            recommendation += "<br><br><strong>Key improvement area:</strong> Focus on improving " + 
+                formatCategoryName(weakestCategory) + " by " + getImprovement(weakestCategory);
+            
+            return recommendation;
+        }
+        
+        function updateApproachDescriptions(totalMCPScore, totalWorkflowScore, mcpPercentage, workflowPercentage, scores) {
+            // Update MCP description
+            let mcpDescription = '';
+            if (mcpPercentage >= 70) {
+                mcpDescription = "Based on your responses, your organization is well-positioned to implement MCP successfully with immediate potential for high-value use cases.";
+            } else if (mcpPercentage >= 50) {
+                mcpDescription = "Based on your responses, MCP implementation is viable but would benefit from targeted preparation in key areas.";
+            } else {
+                mcpDescription = "Based on your responses, MCP implementation would require significant preparation but might be viable for specific use cases.";
+            }
+            document.querySelector('.approach-card.mcp .approach-details p').textContent = mcpDescription;
+            
+            // Update Workflow description
+            let workflowDescription = '';
+            if (workflowPercentage >= 70) {
+                workflowDescription = "Based on your responses, traditional workflow automation would provide an excellent fit for your current needs with rapid time-to-value.";
+            } else if (workflowPercentage >= 50) {
+                workflowDescription = "Based on your responses, workflow automation tools would likely provide a good solution for your immediate needs.";
+            } else {
+                workflowDescription = "Based on your responses, workflow automation may address some needs but could face implementation challenges.";
+            }
+            document.querySelector('.approach-card.workflow .approach-details p').textContent = workflowDescription;
+        }
+        
+        function formatCategoryName(category) {
+            switch(category) {
+                case 'process': return 'Process Complexity';
+                case 'resources': return 'Resource Requirements';
+                case 'integration': return 'Integration Potential';
+                case 'strategic': return 'Strategic Alignment';
+                case 'measurable': return 'Measurable Impact';
+                default: return category;
+            }
+        }
+        
+        function getImprovement(category) {
+            switch(category) {
+                case 'process': 
+                    return 'identifying workflow components that would benefit most from automation and clarifying decision processes.';
+                case 'resources': 
+                    return 'securing appropriate resources, developing API infrastructure, or building necessary technical expertise.';
+                case 'integration': 
+                    return 'enhancing system modularity, standardizing data formats, or improving data accessibility.';
+                case 'strategic': 
+                    return 'building stronger executive support, aligning automation goals with business strategy, or setting realistic implementation timelines.';
+                case 'measurable': 
+                    return 'establishing clearer metrics for current process performance and identifying specific areas with high-value automation potential.';
+                default: 
+                    return 'addressing the specific gaps identified in this assessment.';
+            }
+        }
+        
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Deactivate all headers
+            document.querySelectorAll('.tab-header').forEach(header => {
+                header.classList.remove('active');
+            });
+            
+            // Show the selected tab
+            document.getElementById(tabId).classList.add('active');
+            
+            // Activate the corresponding header
+            document.querySelectorAll('.tab-header').forEach(header => {
+                if (header.getAttribute('onclick').includes(tabId)) {
+                    header.classList.add('active');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
